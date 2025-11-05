@@ -8,11 +8,11 @@ This project consists of three main components:
 
 - **MCP Server**: Exposes file system operations as tools via the Model Context Protocol
 - **AI Agent**: Processes natural language requests and calls MCP tools to fulfill them
-- **Local LLM**: Ollama running Qwen 3:4b model for language understanding
+- **Local LLM**: Ollama running Qwen 3:14b model for language understanding
 
 ## Technologies Used
 
-- **[Ollama](https://ollama.com/)**: Local LLM runtime (running Qwen 3:4b model)
+- **[Ollama](https://ollama.com/)**: Local LLM runtime (running Qwen3:14b model)
 - **[Google ADK](https://github.com/google/generative-ai-python)**: Agent Development Kit for building AI agents
 - **[FastMCP](https://github.com/jlowin/fastmcp)**: Framework for creating MCP servers
 - **[LiteLLM](https://github.com/BerriAI/litellm)**: Unified interface for multiple LLM providers
@@ -36,7 +36,7 @@ brew install ollama
 ### 2. Download the LLM Model
 
 ```bash
-ollama pull qwen3:4b
+ollama pull qwen3:14b
 ```
 
 ### 3. Clone and Setup the Project
@@ -98,8 +98,10 @@ source .venv/bin/activate
 # ollama serve  # Run in another terminal if needed
 
 # Start the agent
-python system_agent/agent.py
+adk web
 ```
+
+This will open a web browser with a chat interface where you can interact with the agent.
 
 ### Example Commands
 
@@ -112,92 +114,43 @@ Agent: [Lists all files and directories in the specified path]
 User: Show me the content of /home/user/Documents/notes.txt
 Agent: [Displays the file content]
 
-User: What files are in the current directory?
-Agent: [Lists files in the working directory]
+User: Find all Python files in /home/user/projects
+Agent: [Searches recursively and lists all .py files]
+
+User: Create a file called test.txt with "Hello World"
+Agent: [Creates the file with the specified content]
+
+User: Run the command "df -h" to check disk space
+Agent: [Asks for confirmation, then executes after approval]
 ```
 
 ## Available MCP Tools
 
-The MCP server exposes the following tools to the agent:
+- The MCP server exposes the following tools to the agent:
 
-### `list_directory(path: str) -> list[str]`
+### 1. `list_directory(path: str) -> list[str]`
 
-Lists all files and subdirectories in the specified directory path (one level deep).
+- Lists all files and subdirectories in the specified directory path (one level deep).
 
-**Features:**
+### 2. `get_file_content(path: str) -> str`
 
-- Validates directory existence
-- Handles permission errors gracefully
-- Reports empty directories
+- Reads and returns the content of a text file.
 
-### `get_file_content(path: str) -> str`
+### 3. `search_files(directory: str, pattern: str) -> list[str]`
 
-Reads and returns the content of a text file.
+- Recursively searches for files matching a glob pattern in the specified directory.
+- Supports wildcards: `*` (anything), `?` (single character)
 
-**Features:**
+### 4. `write_file(path: str, content: str) -> str`
 
-- Validates file existence
-- UTF-8 encoding support
-- Detects and reports binary files
-- Handles permission errors
+- Creates or overwrites a file with the specified content.
 
-## Project Structure
+### 5. `execute_command(command: str, timeout: int = 30, confirmed: bool = False) -> str`
 
-```
-project/
-├── .venv/                  # Virtual environment
-├── requirements.txt        # Python dependencies
-├── src/
-│   └── mcp_server.py      # MCP server implementation
-├── system_agent/
-│   ├── __init__.py
-│   ├── agent.py           # AI agent implementation
-│   └── .env               # Environment variables
-└── README.md              # This file
-```
+- Executes shell commands and returns their output.
 
-## Troubleshooting
-
-### "Command 'python' not found"
-
-Use `python3` instead of `python` on most Linux distributions.
-
-### "ModuleNotFoundError"
-
-Ensure the virtual environment is activated. You should see `(.venv)` in your terminal prompt.
-
-### "Client failed to connect"
-
-Make sure the MCP server is running in a separate terminal before starting the agent.
-
-### "OLLAMA_API_BASE not found"
-
-Set the environment variable either in `.env` file or export it in your shell session.
-
-### Ollama connection issues
-
-Ensure Ollama is running with `ollama serve` or check if it started automatically as a service.
-
-## Security Considerations
-
-- The current implementation provides **read-only** access to the file system
-- All operations include permission checks and error handling
-- The server runs on `localhost` only, not accessible from network
-- Consider implementing authentication before exposing to network
-
-## Future Enhancements
-
-- Add write operations (create, modify, delete files)
-- Process management tools (list, start, stop processes)
-- System monitoring (CPU, memory, disk usage)
-- File search and pattern matching
-- User authentication and authorization
-- Logging and audit trails
-
-## License
-
-This project is for educational purposes as part of the ASO (Operating Systems Administration) course.
-
-## Authors
-
-Created as part of Year 4 ASO Project, Phase 1
+- Confirmation workflow:
+  1. Agent calls tool without confirmation
+  2. Tool returns confirmation request
+  3. Agent asks user for permission
+  4. If approved, agent calls again with `confirmed=True`

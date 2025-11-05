@@ -2,4 +2,3 @@
 google_adk
 fastmcp
 litellm
-psutil
