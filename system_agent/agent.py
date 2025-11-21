@@ -1,4 +1,5 @@
 # File agent.py
+import os
 from google.adk.agents import Agent
 from google.adk.models.lite_llm import LiteLlm
 from google.adk.tools.mcp_tool.mcp_toolset import McpToolset
@@ -6,9 +7,17 @@ from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerPa
 from google.adk.planners import BuiltInPlanner
 from google.genai.types import ThinkingConfig
 
+# Configuration
+LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "ollama_chat")
+LLM_MODEL = os.environ.get("LLM_MODEL", "qwen3:14b")
+MCP_SERVER_HOST = os.environ.get("MCP_SERVER_HOST", "localhost")
+MCP_SERVER_PORT = os.environ.get("MCP_SERVER_PORT", "9000")
+# MCP_SERVER_URL = f"http://{MCP_SERVER_HOST}:{MCP_SERVER_PORT}/mcp"
+MCP_SERVER_URL = f"http://mcp-server:9000/mcp"
+
 
 root_agent = Agent(
-        model=LiteLlm(model="ollama_chat/qwen3:14b"),
+        model=LiteLlm(model=f"{LLM_PROVIDER}/{LLM_MODEL}"),
         name="system_admin_agent",
         instruction="""You are a system administration agent with access to file system operations and command execution via an MCP server.
 
@@ -61,7 +70,7 @@ GUIDELINES:
         
         tools=[
             McpToolset(
-                connection_params=StreamableHTTPServerParams(url="http://localhost:9000/mcp")
+                connection_params=StreamableHTTPServerParams(url=MCP_SERVER_URL)
             )
             ],
         planner=BuiltInPlanner(

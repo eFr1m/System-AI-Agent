@@ -1,5 +1,6 @@
 # Byte-compiled / optimized / DLL files
 .serena
+.github
 
 __pycache__/
 *.py[codz]

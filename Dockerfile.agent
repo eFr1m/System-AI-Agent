@@ -1,0 +1,24 @@
+# syntax=docker/dockerfile:1.7
+FROM python:3.13-slim AS base
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    LLM_PROVIDER="ollama_chat" \
+    LLM_MODEL="qwen3:14b" \
+    MCP_SERVER_URL="http://mcp-server:9000/mcp" \
+    OLLAMA_API_BASE="http://ollama:11434"
+
+WORKDIR /app
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends build-essential curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+EXPOSE 8080
+
+CMD ["adk", "web", "--host", "0.0.0.0", "--port", "8080"]

@@ -103,6 +103,60 @@ adk web
 
 This will open a web browser with a chat interface where you can interact with the agent.
 
+## Dockerized Workflow
+
+### Quick Start
+
+1. Build and start all services (Ollama, MCP server, ADK web UI):
+
+```bash
+docker compose up --build
+```
+
+2. Wait for the Ollama service to download `qwen3:14b` on first run (stored in the `ollama-data` volume). Ollama runs in CPU mode by default, so NVIDIA GPUs and runtime hooks are not required.
+
+3. Visit `http://localhost:8080` for the ADK web UI. The MCP server listens on `http://localhost:9000`, and Ollama stays on `http://localhost:11434`.
+
+#### Optional helper script
+
+Run `./scripts/setup.sh` to launch all services and automatically pull the configured model inside the Ollama container. The script reads `.env`, so adjust `LLM_MODEL`, ports, or other values there before executing it.
+
+### Run with Docker
+
+To start the system, simply run the setup script for your platform. This will start the containers and ensure the LLM model is downloaded.
+
+**On Linux/macOS:**
+
+```bash
+./scripts/setup.sh
+```
+
+**On Windows:**
+
+```bat
+scripts\setup.bat
+```
+
+To view logs:
+
+```bash
+docker compose logs -f
+```
+
+Stop everything with `docker compose down`.
+
+### Configuration
+
+All configuration is set directly in `docker-compose.yml`. To customize ports, models, or endpoints, edit the `environment` sections for each service:
+
+- **Ollama**: Port `11434`, keep-alive `24h`
+- **MCP Server**: Binds to `0.0.0.0:9000`
+- **Agent**: Connects to MCP server at `mcp-server:9000`, uses `ollama_chat/qwen3:14b` model, web UI on port `8080`
+
+The agent constructs the MCP endpoint as `http://{MCP_SERVER_HOST}:{MCP_SERVER_PORT}/mcp` from the environment variables.
+
+**Note:** Bind mounts keep the project files in sync with containers; add extra volume mounts in `docker-compose.yml` if the MCP server must manage additional host paths.
+
 ### Example Commands
 
 Once the agent is running, you can interact with it using natural language:

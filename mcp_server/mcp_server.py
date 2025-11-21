@@ -1,6 +1,8 @@
 import os
 import fnmatch
 import subprocess
+from starlette.middleware import Middleware
+from starlette.middleware.cors import CORSMiddleware
 from fastmcp import FastMCP
 
 
@@ -180,8 +182,13 @@ def execute_command(command: str, timeout: int = 30, confirmed: bool = False) ->
         return f"Error: {str(e)}"
 
 
-if __name__ == "__main__":
-    print("Starting MCP server on http://localhost:9000...")
-    mcp.run(transport="http",
-            host="localhost",         
-            port=9000)
+middleware = [
+    Middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+]
+
+app = mcp.http_app(middleware=middleware)
