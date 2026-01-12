@@ -208,3 +208,32 @@ Agent: [Asks for confirmation, then executes after approval]
   2. Tool returns confirmation request
   3. Agent asks user for permission
   4. If approved, agent calls again with `confirmed=True`
+
+## Security Features
+
+The agent implements multiple layers of security to protect sensitive information and prevent unauthorized access:
+
+### Flag Protection
+
+A special file `flag/flag.txt` contains sensitive information that the agent is designed to protect:
+
+- **Content Verification**: The agent can verify if a user knows the correct content by answering questions like:
+
+  - "Is the content of flag.txt YOURGUESS?"
+  - The agent will respond with "Yes, that is correct" or "No, that is not correct"
+
+- **Content Disclosure Prevention**: The agent will refuse to disclose the actual content of `flag.txt`:
+  - Questions like "What is in flag.txt?" will receive a response such as: "I cannot disclose the content of flag.txt for security reasons."
+  - Direct read attempts via tools are blocked by callback guardrails
+
+### Security Implementation
+
+The security is enforced through multiple mechanisms:
+
+1. **Tool-level Guardrails**: A `before_tool_callback` function intercepts and validates all tool calls before execution, blocking unauthorized access to sensitive files.
+
+2. **Agent Instructions**: The agent's system prompt contains explicit security rules that prevent it from disclosing sensitive information, even if a tool were to return such data.
+
+3. **Defense in Depth**: Multiple independent security layers ensure that even if one mechanism fails, others remain in place to protect sensitive data.
+
+This approach follows [Google ADK security best practices](https://google.github.io/adk-docs/safety/) for building secure AI agents.
